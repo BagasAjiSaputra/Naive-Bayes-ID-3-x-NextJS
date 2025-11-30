@@ -3,55 +3,54 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
-export default function NaiveBayesPage() {
+export default function ID3page() {
   const [fitur, setFitur] = useState<string[]>(Array(11).fill(""));
   const [bulkInput, setBulkInput] = useState("");
   const [result, setResult] = useState("");
+  const [method, setMethod] = useState("");
   const [metrics, setMetrics] = useState<any>(null);
 
-  // === Ambil Akurasi ===
+  // === Ambil Akurasi ID3 ===
   useEffect(() => {
     const fetchAccuracy = async () => {
-      const res = await fetch("http://localhost:5000/accuracy");
+      const res = await fetch("http://localhost:5000/id3accuracy");
       const data = await res.json();
       setMetrics(data);
     };
     fetchAccuracy();
   }, []);
 
-  // Copy Teks ke Input
   const handleChange = (i: number, value: string) => {
     const copy = [...fitur];
     copy[i] = value;
     setFitur(copy);
   };
 
-  // Input dipisah koma
+  // === INPUT INSTAN DIPISAH KOMA ===
   const handleBulkInput = (value: string) => {
     setBulkInput(value);
 
     const split = value.split(",").map((v) => v.trim());
-
     if (split.length === 11) {
       setFitur(split);
     }
   };
 
-  // Fetch Naive Bayes
   const handlePredict = async () => {
     const fiturNumber = fitur.map((f) => Number(f));
 
-    const res = await fetch("http://localhost:5000/predict", {
+    const res = await fetch("http://localhost:5000/idtree", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        method: "naive_bayes",
+        method: "id3",
         fitur: fiturNumber,
       }),
     });
 
     const data = await res.json();
     setResult(String(data.prediction));
+    setMethod(String(data.method));
   };
 
   // Label Fitur
@@ -69,14 +68,13 @@ export default function NaiveBayesPage() {
     "alcohol"
   ];
 
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className="max-w-1/2 mx-auto p-6 space-y-6"
     >
-      <h1 className="text-2xl font-bold">Naive Bayes Wine Quality</h1>
+      <h1 className="text-2xl font-bold">ID3 Decision Tree Wine Quality</h1>
 
       {/* === CARD AKURASI === */}
       {metrics ? (
@@ -136,15 +134,13 @@ export default function NaiveBayesPage() {
         "Loading accuracy..."
       )}
 
-
-
-      {/* === INPUT INSTAN 1 BARIS === */}
+      {/* === INPUT INSTAN === */}
       <input
         type="text"
         placeholder="Input 11 fitur dipisah koma"
         value={bulkInput}
         onChange={(e) => handleBulkInput(e.target.value)}
-        className="w-full p-3 rounded-xl border border-gray-200 shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-300 transition-shadow duration-200 font-mono text-sm"
+        className="w-full p-3 rounded-xl border border-gray-200 shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-300 transition-shadow duration-200 font-mono text-sm"
       />
 
       {/* Input Fitur */}
@@ -165,14 +161,12 @@ export default function NaiveBayesPage() {
         ))}
       </div>
 
-
-
       {/* === BUTTON === */}
       <button
         onClick={handlePredict}
-        className="bg-blue-600 text-white p-3 rounded-xl w-full shadow-md hover:shadow-lg transition-shadow duration-200"
+        className="bg-teal-600 text-white p-3 rounded-xl w-full shadow-md hover:shadow-lg transition-shadow duration-200"
       >
-        Analisis
+        Predict ID3
       </button>
 
       {/* === HASIL === */}
@@ -182,10 +176,10 @@ export default function NaiveBayesPage() {
           animate={{ opacity: 1 }}
           className="bg-gray-100 p-4 rounded-xl text-lg font-semibold text-center shadow-sm"
         >
-          Hasil Prediksi: {result}
+          <p>Metode: <span className="text-teal-600">{method}</span></p>
+          <p className="mt-2">Hasil Prediksi: {result}</p>
         </motion.div>
       )}
     </motion.div>
-
   );
 }
